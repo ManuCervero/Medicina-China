@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "carolina-escudero-medicina-china",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-16",
+  "assets": {
+    "directory": "../frontend/dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "carolina-escudero-db",
+      "database_id": "5202aa50-a915-4cd5-a875-d8d5a1f9a6f3",
+      "migrations_dir": "./migrations"
+    }
+  ]
+}

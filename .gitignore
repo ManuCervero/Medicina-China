@@ -1,0 +1,35 @@
+# Node modules
+node_modules/
+.npm/
+
+# Build outputs
+dist/
+build/
+.wrangler/
+.dev.vars
+
+# Local environment variables / credentials
+.env
+.env.*
+!.env.example
+wrangler.jsonc.local
+.wrangler/state
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
