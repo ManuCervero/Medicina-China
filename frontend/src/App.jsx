@@ -126,6 +126,9 @@ export default function App() {
       
       // Western diagnosis / current illness
       western_diagnosis: '',
+
+      // Probable causes (external, internal, other)
+      causes: '',
       
       // Systems review
       temperature: '',
@@ -175,6 +178,7 @@ export default function App() {
         body_color: '',
         coating_shape: '',
         coating_color: '',
+        coating_distribution: '',
         notes: ''
       },
       
@@ -212,11 +216,18 @@ export default function App() {
         external: { viento: false, frio: false, calor: false, humedad: false, sequedad: false, fuego: false }
       },
       
-      // 5 Elements (Qi, Xue, FO vs Def, Est, Inv/Q)
+      // 5 Elements: estado general (Qi, Xue, FO) y estado por elemento (Fuego/Madera/Tierra/Agua/Metal)
       elements_5: {
         qi: { def: false, est: false, inv: false },
         xue: { def: false, est: false, inv: false },
-        fo: { def: false, est: false, inv: false }
+        fo: { def: false, est: false, inv: false },
+        per_element: {
+          fuego: { def: false, est: false, inv: false },
+          madera: { def: false, est: false, inv: false },
+          tierra: { def: false, est: false, inv: false },
+          agua: { def: false, est: false, inv: false },
+          metal: { def: false, est: false, inv: false }
+        }
       },
       
       // Affected organs & meridians
@@ -245,7 +256,7 @@ export default function App() {
       treatment_principle: '',
       treatment_spirit: { tonif: false, disper: false, elimin: false, purgar: false, enfriar: false, calent: false, armon: false },
       recipe_technique: '',
-      therapies: { tuina: false, ventosas: false, moxa: false, electro: false },
+      therapies: { acupuntura: false, tuina: false, ventosas: false, moxa: false, electro: false, fitoterapia: false, auriculoterapia: false },
       notes: '',
       
       // Follow-up specific fields
@@ -1262,7 +1273,7 @@ export default function App() {
                                 ].filter(Boolean).join(', ') || 'Normal'}
                                 <br/>
                                 <strong>Cuerpo:</strong> Forma: {d.tongue.body_shape || '-'} | Color: {d.tongue.body_color || '-'} | Agregados: {d.tongue.body_added || '-'}<br/>
-                                <strong>Saburra:</strong> Distribución: {d.tongue.coating_shape || '-'} | Color: {d.tongue.coating_color || '-'}<br/>
+                                <strong>Saburra:</strong> Forma: {d.tongue.coating_shape || '-'} | Color: {d.tongue.coating_color || '-'} | Distribución y espesor: {d.tongue.coating_distribution || '-'}<br/>
                                 <strong>Observaciones:</strong> {d.tongue.notes || '-'}
                               </span>
                             </div>
@@ -1283,7 +1294,7 @@ export default function App() {
                                 </tbody>
                               </table>
                             )}
-                            {d.pulses?.right && <div style={{ fontSize: '0.75rem', marginTop: '5px' }}><strong>Sintomatología:</strong> Frec: {d.pulses.right.frequency || '-'} | Onda: {d.pulses.right.waveform || '-'}</div>}
+                            {d.pulses?.right && <div style={{ fontSize: '0.75rem', marginTop: '5px' }}><strong>Sintomatología:</strong> Frec: {d.pulses.right.frequency || '-'} | Tensión: {d.pulses.right.tension || '-'} | Diámetro: {d.pulses.right.diameter || '-'} | Fuerza: {d.pulses.right.force || '-'} | Oclusión: {d.pulses.right.occlusion || '-'} | Onda: {d.pulses.right.waveform || '-'} | Gral: {d.pulses.right.desc_general || '-'}</div>}
                           </div>
                           <div className="field">
                             <label>Pulso IZQUIERDO</label>
@@ -1297,7 +1308,7 @@ export default function App() {
                                 </tbody>
                               </table>
                             )}
-                            {d.pulses?.left && <div style={{ fontSize: '0.75rem', marginTop: '5px' }}><strong>Sintomatología:</strong> Frec: {d.pulses.left.frequency || '-'} | Onda: {d.pulses.left.waveform || '-'}</div>}
+                            {d.pulses?.left && <div style={{ fontSize: '0.75rem', marginTop: '5px' }}><strong>Sintomatología:</strong> Frec: {d.pulses.left.frequency || '-'} | Tensión: {d.pulses.left.tension || '-'} | Diámetro: {d.pulses.left.diameter || '-'} | Fuerza: {d.pulses.left.force || '-'} | Oclusión: {d.pulses.left.occlusion || '-'} | Onda: {d.pulses.left.waveform || '-'} | Gral: {d.pulses.left.desc_general || '-'}</div>}
                           </div>
                         </div>
 
@@ -1327,6 +1338,19 @@ export default function App() {
                           <div className="field">
                             <label>Causas Probables</label>
                             <span>{d.causes || '-'}</span>
+                          </div>
+                          <div className="field full-width">
+                            <label>5 Elementos</label>
+                            <span>
+                              {d.elements_5?.per_element ? Object.entries(d.elements_5.per_element).filter(([_, v]) => v.def || v.est || v.inv).map(([elem, v]) => `${elem.toUpperCase()} (${[v.def && 'Def', v.est && 'Est', v.inv && 'Inv'].filter(Boolean).join('/')})`).join(', ') || 'Sin alteraciones' : '-'}
+                              <br/>
+                              <strong>Estado General:</strong> {d.elements_5 ? ['qi', 'xue', 'fo'].map(cat => {
+                                const v = d.elements_5[cat]
+                                if (!v) return null
+                                const flags = [v.def && 'Def', v.est && 'Est', v.inv && 'Inv'].filter(Boolean).join('/')
+                                return flags ? `${cat.toUpperCase()}: ${flags}` : null
+                              }).filter(Boolean).join(' | ') || 'Sin alteraciones' : '-'}
+                            </span>
                           </div>
                         </div>
 
@@ -1375,7 +1399,7 @@ export default function App() {
                               ].filter(Boolean).join(', ') || 'Normal'}
                               <br/>
                               <strong>Cuerpo:</strong> Forma: {d.tongue.body_shape || '-'} | Color: {d.tongue.body_color || '-'} | Agregados: {d.tongue.body_added || '-'}<br/>
-                              <strong>Saburra:</strong> Distribución: {d.tongue.coating_shape || '-'} | Color: {d.tongue.coating_color || '-'}<br/>
+                              <strong>Saburra:</strong> Forma: {d.tongue.coating_shape || '-'} | Color: {d.tongue.coating_color || '-'} | Distribución y espesor: {d.tongue.coating_distribution || '-'}<br/>
                             </span>
                           </div>
                         )}
@@ -1394,6 +1418,7 @@ export default function App() {
                                 </tbody>
                               </table>
                             )}
+                            {d.pulses?.right && <div style={{ fontSize: '0.75rem', marginTop: '5px' }}><strong>Sintomatología:</strong> Frec: {d.pulses.right.frequency || '-'} | Tensión: {d.pulses.right.tension || '-'} | Diámetro: {d.pulses.right.diameter || '-'} | Fuerza: {d.pulses.right.force || '-'} | Oclusión: {d.pulses.right.occlusion || '-'} | Onda: {d.pulses.right.waveform || '-'} | Gral: {d.pulses.right.desc_general || '-'}</div>}
                           </div>
                           <div className="field">
                             <label>Pulso IZQUIERDO</label>
@@ -1407,6 +1432,7 @@ export default function App() {
                                 </tbody>
                               </table>
                             )}
+                            {d.pulses?.left && <div style={{ fontSize: '0.75rem', marginTop: '5px' }}><strong>Sintomatología:</strong> Frec: {d.pulses.left.frequency || '-'} | Tensión: {d.pulses.left.tension || '-'} | Diámetro: {d.pulses.left.diameter || '-'} | Fuerza: {d.pulses.left.force || '-'} | Oclusión: {d.pulses.left.occlusion || '-'} | Onda: {d.pulses.left.waveform || '-'} | Gral: {d.pulses.left.desc_general || '-'}</div>}
                           </div>
                         </div>
 
@@ -1533,7 +1559,7 @@ export default function App() {
                                 </div>
                                 <span style={{ fontSize: '0.85rem' }}>
                                   <strong>Cuerpo:</strong> Forma: {d.tongue.body_shape || '-'} | Color: {d.tongue.body_color || '-'} | Agregados: {d.tongue.body_added || '-'}<br/>
-                                  <strong>Saburra:</strong> Dist: {d.tongue.coating_shape || '-'} | Color: {d.tongue.coating_color || '-'}<br/>
+                                  <strong>Saburra:</strong> Forma: {d.tongue.coating_shape || '-'} | Color: {d.tongue.coating_color || '-'} | Dist: {d.tongue.coating_distribution || '-'}<br/>
                                   {d.tongue.notes && <span><strong>Notas:</strong> {d.tongue.notes}</span>}
                                 </span>
                               </div>
@@ -1571,6 +1597,19 @@ export default function App() {
                           <div>
                             <label>Causas Probables</label>
                             <span style={{ fontSize: '0.8rem' }}>{d.causes || '-'}</span>
+                          </div>
+                          <div>
+                            <label>5 Elementos</label>
+                            <span style={{ fontSize: '0.8rem' }}>
+                              {d.elements_5?.per_element ? Object.entries(d.elements_5.per_element).filter(([_, v]) => v.def || v.est || v.inv).map(([elem, v]) => `${elem.toUpperCase()} (${[v.def && 'Def', v.est && 'Est', v.inv && 'Inv'].filter(Boolean).join('/')})`).join(', ') || 'Sin alteraciones' : '-'}
+                              <br/>
+                              <strong>Gral:</strong> {d.elements_5 ? ['qi', 'xue', 'fo'].map(cat => {
+                                const v = d.elements_5[cat]
+                                if (!v) return null
+                                const flags = [v.def && 'Def', v.est && 'Est', v.inv && 'Inv'].filter(Boolean).join('/')
+                                return flags ? `${cat.toUpperCase()}: ${flags}` : null
+                              }).filter(Boolean).join(' | ') || 'Sin alteraciones' : '-'}
+                            </span>
                           </div>
                         </div>
 
@@ -1623,7 +1662,7 @@ export default function App() {
                               ))}
                             </div>
                             <span style={{ fontSize: '0.85rem' }}>
-                              <strong>Cuerpo:</strong> {d.tongue.body_shape || '-'} ({d.tongue.body_color || '-'}) {d.tongue.body_added || ''} | <strong>Saburra:</strong> {d.tongue.coating_shape || '-'} ({d.tongue.coating_color || '-'})
+                              <strong>Cuerpo:</strong> {d.tongue.body_shape || '-'} ({d.tongue.body_color || '-'}) {d.tongue.body_added || ''} | <strong>Saburra:</strong> {d.tongue.coating_shape || '-'} ({d.tongue.coating_color || '-'}) {d.tongue.coating_distribution || ''}
                             </span>
                           </div>
                         )}
@@ -2508,9 +2547,10 @@ export default function App() {
                           <input type="text" className="form-control" style={{ padding: '0.4rem', fontSize: '0.8rem' }} placeholder="Cuerpo: Color" value={historyForm.tongue.body_color} onChange={e => setHistoryForm({...historyForm, tongue: {...historyForm.tongue, body_color: e.target.value}})} />
                           <input type="text" className="form-control" style={{ padding: '0.4rem', fontSize: '0.8rem' }} placeholder="Cuerpo: Agregados" value={historyForm.tongue.body_added} onChange={e => setHistoryForm({...historyForm, tongue: {...historyForm.tongue, body_added: e.target.value}})} />
                         </div>
-                        <div className="form-row" style={{ gridTemplateColumns: '1.5fr 1fr', marginTop: '0.4rem' }}>
-                          <input type="text" className="form-control" style={{ padding: '0.4rem', fontSize: '0.8rem' }} placeholder="Saburra: Distribución/Espesor" value={historyForm.tongue.coating_shape} onChange={e => setHistoryForm({...historyForm, tongue: {...historyForm.tongue, coating_shape: e.target.value}})} />
-                          <input type="text" className="form-control" style={{ padding: '0.4rem', fontSize: '0.8rem' }} placeholder="Saburra: Color" value={historyForm.tongue.coating_color} onChange={e => setHistoryForm({...historyForm, tongue: {...historyForm.tongue, coating_color: e.target.value}})} />
+                        <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr 1.2fr', marginTop: '0.4rem' }}>
+                          <input type="text" className="form-control" style={{ padding: '0.4rem', fontSize: '0.8rem' }} placeholder="Saburra: Forma (fina, gruesa, pelada...)" value={historyForm.tongue.coating_shape} onChange={e => setHistoryForm({...historyForm, tongue: {...historyForm.tongue, coating_shape: e.target.value}})} />
+                          <input type="text" className="form-control" style={{ padding: '0.4rem', fontSize: '0.8rem' }} placeholder="Saburra: Color (blanca, amarilla, gris...)" value={historyForm.tongue.coating_color} onChange={e => setHistoryForm({...historyForm, tongue: {...historyForm.tongue, coating_color: e.target.value}})} />
+                          <input type="text" className="form-control" style={{ padding: '0.4rem', fontSize: '0.8rem' }} placeholder="Saburra: Distribución y espesor" value={historyForm.tongue.coating_distribution} onChange={e => setHistoryForm({...historyForm, tongue: {...historyForm.tongue, coating_distribution: e.target.value}})} />
                         </div>
                       </div>
                     </div>
@@ -2554,6 +2594,9 @@ export default function App() {
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem', marginTop: '0.25rem' }}>
                           <input type="text" className="form-control" style={{ padding: '0.3rem', fontSize: '0.75rem' }} placeholder="Fuerza (amplitud)" value={historyForm.pulses.right.force} onChange={e => setHistoryForm({...historyForm, pulses: {...historyForm.pulses, right: {...historyForm.pulses.right, force: e.target.value}}})} />
+                          <input type="text" className="form-control" style={{ padding: '0.3rem', fontSize: '0.75rem' }} placeholder="Oclusión" value={historyForm.pulses.right.occlusion} onChange={e => setHistoryForm({...historyForm, pulses: {...historyForm.pulses, right: {...historyForm.pulses.right, occlusion: e.target.value}}})} />
+                        </div>
+                        <div style={{ marginTop: '0.25rem' }}>
                           <input type="text" className="form-control" style={{ padding: '0.3rem', fontSize: '0.75rem' }} placeholder="Desc. General / Niveles" value={historyForm.pulses.right.desc_general} onChange={e => setHistoryForm({...historyForm, pulses: {...historyForm.pulses, right: {...historyForm.pulses.right, desc_general: e.target.value}}})} />
                         </div>
                       </div>
@@ -2592,6 +2635,9 @@ export default function App() {
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.25rem', marginTop: '0.25rem' }}>
                           <input type="text" className="form-control" style={{ padding: '0.3rem', fontSize: '0.75rem' }} placeholder="Fuerza (amplitud)" value={historyForm.pulses.left.force} onChange={e => setHistoryForm({...historyForm, pulses: {...historyForm.pulses, left: {...historyForm.pulses.left, force: e.target.value}}})} />
+                          <input type="text" className="form-control" style={{ padding: '0.3rem', fontSize: '0.75rem' }} placeholder="Oclusión" value={historyForm.pulses.left.occlusion} onChange={e => setHistoryForm({...historyForm, pulses: {...historyForm.pulses, left: {...historyForm.pulses.left, occlusion: e.target.value}}})} />
+                        </div>
+                        <div style={{ marginTop: '0.25rem' }}>
                           <input type="text" className="form-control" style={{ padding: '0.3rem', fontSize: '0.75rem' }} placeholder="Desc. General / Niveles" value={historyForm.pulses.left.desc_general} onChange={e => setHistoryForm({...historyForm, pulses: {...historyForm.pulses, left: {...historyForm.pulses.left, desc_general: e.target.value}}})} />
                         </div>
                       </div>
@@ -2706,6 +2752,36 @@ export default function App() {
                         </div>
                       </div>
                     </div>
+
+                    <h4 style={{ margin: '1rem 0 0.5rem', color: 'var(--primary)' }}>5 Elementos</h4>
+                    <div className="checklist-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: '0.75rem' }}>
+                      {[['fuego', '🔥 Fuego'], ['madera', '🪵 Madera'], ['tierra', '🏔️ Tierra'], ['agua', '💧 Agua'], ['metal', '⚙️ Metal']].map(([elem, label]) => (
+                        <div key={elem} style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>{label}</span>
+                          {[['def', 'Def'], ['est', 'Est'], ['inv', 'Inv']].map(([k, l]) => (
+                            <label key={k} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={historyForm.elements_5.per_element[elem][k]} onChange={e => setHistoryForm({...historyForm, elements_5: {...historyForm.elements_5, per_element: {...historyForm.elements_5.per_element, [elem]: {...historyForm.elements_5.per_element[elem], [k]: e.target.checked}}}})} />
+                              {l}
+                            </label>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+
+                    <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--primary)' }}>Estado General (Qi / Xue / Fluidos Orgánicos)</label>
+                    <div className="checklist-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                      {[['qi', 'Qi'], ['xue', 'Xue'], ['fo', 'F.O.']].map(([cat, catLabel]) => (
+                        <div key={cat} style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-muted)' }}>{catLabel}</span>
+                          {[['def', 'Deficiencia'], ['est', 'Estasis'], ['inv', 'Invasión']].map(([k, l]) => (
+                            <label key={k} style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                              <input type="checkbox" checked={historyForm.elements_5[cat][k]} onChange={e => setHistoryForm({...historyForm, elements_5: {...historyForm.elements_5, [cat]: {...historyForm.elements_5[cat], [k]: e.target.checked}}})} />
+                              {l}
+                            </label>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
                   </>
                 )}
 
@@ -2811,9 +2887,9 @@ export default function App() {
                     </div>
 
                     <div className="form-group">
-                      <label>Técnicas Complementarias Utilizadas</label>
+                      <label>Técnica Empleada</label>
                       <div className="checklist-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-                        {[['tuina', 'Tuina'], ['ventosas', 'Ventosas'], ['moxa', 'Moxa'], ['electro', 'Electroacupuntura']].map(([k, label]) => (
+                        {[['acupuntura', 'Acupuntura'], ['tuina', 'Tuina'], ['ventosas', 'Ventosas'], ['moxa', 'Moxa'], ['electro', 'Electroacupuntura'], ['fitoterapia', 'Fitoterapia'], ['auriculoterapia', 'Auriculoterapia']].map(([k, label]) => (
                           <div className="checklist-item" key={k}>
                             <input type="checkbox" id={`ther_${k}`} checked={historyForm.therapies[k]} onChange={e => setHistoryForm({...historyForm, therapies: {...historyForm.therapies, [k]: e.target.checked}})} />
                             <label htmlFor={`ther_${k}`}>{label}</label>
